@@ -1,12 +1,12 @@
 ########################################################
-# set.seed(0)
-# actual = c('a','b','c')[runif(100, 1,4)]
-# predicted = actual
-# predicted[runif(30,1,100)] = actual[runif(30,1,100)]
-# cm = as.matrix(table(Actual=actual, Predicted=predicted))
-# temp = Evaluate(actual=actual, predicted=predicted)
-# temp = Evaluate(cm=cm)
-# temp$Metrics
+ set.seed(0)
+ actual = c('a','b','c')[runif(100, 1,4)]
+ predicted = actual
+ predicted[runif(30,1,100)] = actual[runif(30,1,100)]
+ cm = as.matrix(table(Actual=actual, Predicted=predicted))
+ temp = Evaluate(actual=actual, predicted=predicted)
+ temp = Evaluate(cm=cm)
+ View(temp$Metrics)
 ########################################################
 
 #input actual & predicted vectors or actual vs predicted confusion matrix 
@@ -46,7 +46,7 @@ Evaluate = function(actual=NULL, predicted=NULL, cm=NULL){
                             n-rowsums[i] - colsums[i] + cm[i,i]);
                       return(matrix(v, nrow = 2, byrow = T))})
   
-  s = matrix(0, nrow=2,ncol=2)
+  s = matrix(0, nrow=2, ncol=2)
   for(i in 1:nc){s=s+oneVsAll[[i]]}
   
   #avg accuracy
@@ -56,18 +56,18 @@ Evaluate = function(actual=NULL, predicted=NULL, cm=NULL){
   microPrf = (diag(s) / apply(s,1, sum))[1];
   
   #majority class
-  mcIndex = which(rowsums==max(rowsums)) # majority-class index
+  mcIndex = which(rowsums==max(rowsums))[1] # majority-class index
   mcAccuracy = as.numeric(p[mcIndex]) 
   mcRecall = 0*p;  mcRecall[mcIndex] = 1
   mcPrecision = 0*p; mcPrecision[mcIndex] = p[mcIndex]
   mcF1 = 0*p; mcF1[mcIndex] = 2 * mcPrecision[mcIndex] / (mcPrecision[mcIndex] + 1)
   
   #random accuracy
-  rndAccuracy = sapply(oneVsAll, function(x) apply(x,1,sum)[1]*apply(x,2,sum)[1]) 
-  rndAccuracy = sum(rndAccuracy) / n^2
+  expAccuracy = sapply(oneVsAll, function(x) apply(x,1,sum)[1]*apply(x,2,sum)[1]) 
+  expAccuracy = sum(expAccuracy) / n^2
   
   #kappa
-  kappa = (accuracy - rndAccuracy) / (1 - rndAccuracy)
+  kappa = (accuracy - expAccuracy) / (1 - expAccuracy)
   
   #random guess
   rgAccuracy = 1 / nc
@@ -103,7 +103,6 @@ Evaluate = function(actual=NULL, predicted=NULL, cm=NULL){
     MajorityClassPrecision = mcPrecision,
     MajorityClassRecall = mcRecall,
     MajorityClassF1 = mcF1,
-    RandomAccuracy = rndAccuracy,
     Kappa = kappa,
     RandomGuessAccuracy = rgAccuracy,
     RandomGuessPrecision = rgPrecision,
