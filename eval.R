@@ -1,5 +1,5 @@
 ########################################################
- set.seed(0)
+ set.seed(15)
  actual = c('a','b','c')[runif(100, 1,4)]
  predicted = actual
  predicted[runif(30,1,100)] = actual[runif(30,1,100)]
@@ -23,6 +23,7 @@ Evaluate = function(actual=NULL, predicted=NULL, cm=NULL){
   rowsums = apply(cm, 1, sum) # number of instances per class
   colsums = apply(cm, 2, sum) # number of predictions per class
   p = rowsums / n # distribution of instances over the classes
+  q = colsums / n # distribution of instances over the predicted classes
   
   #accuracy
   accuracy = sum(diag) / n
@@ -63,9 +64,7 @@ Evaluate = function(actual=NULL, predicted=NULL, cm=NULL){
   mcF1 = 0*p; mcF1[mcIndex] = 2 * mcPrecision[mcIndex] / (mcPrecision[mcIndex] + 1)
   
   #random accuracy
-  expAccuracy = sapply(oneVsAll, function(x) apply(x,1,sum)[1]*apply(x,2,sum)[1]) 
-  expAccuracy = sum(expAccuracy) / n^2
-  
+  expAccuracy = sum(p*q)
   #kappa
   kappa = (accuracy - expAccuracy) / (1 - expAccuracy)
   
