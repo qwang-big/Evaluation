@@ -10,8 +10,10 @@ results = Evaluate(actual=actual, predicted=predicted)
 Evaluate = function(actual=NULL, predicted=NULL, cm=NULL){
   if(is.null(cm)) {
     naVals = union(which(is.na(actual)), which(is.na(predicted)))
-    actual = actual[-naVals]
-    predicted = predicted[-naVals]
+    if(length(naVals) > 0) {
+      actual = actual[-naVals]
+      predicted = predicted[-naVals]
+    }
     f = factor(union(unique(actual), unique(predicted)))
     actual = factor(actual, levels = levels(f))
     predicted = factor(predicted, levels = levels(f))
