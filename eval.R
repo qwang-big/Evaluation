@@ -1,19 +1,17 @@
 ########################################################
- set.seed(0)
- actual = c('a','b','c')[runif(100, 1,4)]
- predicted = actual
- predicted[runif(30,1,100)] = actual[runif(30,1,100)]
- cm = as.matrix(table(Actual=actual, Predicted=predicted))
- temp = Evaluate(actual=actual, predicted=predicted)
- temp = Evaluate(cm=cm)
- View(temp$Metrics)
+set.seed(777)
+actual = c('a','b','c')[runif(100, 1,4)]
+predicted = actual
+predicted[runif(30,1,100)] = actual[runif(30,1,100)]
+results = Evaluate(actual=actual, predicted=predicted)
 ########################################################
 
 #input actual & predicted vectors or actual vs predicted confusion matrix 
 Evaluate = function(actual=NULL, predicted=NULL, cm=NULL){
   if(is.null(cm)) {
-    actual = actual[!is.na(actual)]
-    predicted = predicted[!is.na(predicted)]
+    naVals = union(which(is.na(actual)), which(is.na(predicted)))
+    actual = actual[-naVals]
+    predicted = predicted[-naVals]
     f = factor(union(unique(actual), unique(predicted)))
     actual = factor(actual, levels = levels(f))
     predicted = factor(predicted, levels = levels(f))
@@ -31,16 +29,16 @@ Evaluate = function(actual=NULL, predicted=NULL, cm=NULL){
   #accuracy
   accuracy = sum(diag) / n
   
-  #per class
+  #per class prf
   recall = diag / rowsums
   precision = diag / colsums
   f1 = 2 * precision * recall / (precision + recall)
   
-  #macro
+  #macro prf
   macroPrecision = mean(precision)
   macroRecall = mean(recall)
   macroF1 = mean(f1)
- 
+  
   #1-vs-all matrix
   oneVsAll = lapply(1 : nc,
                     function(i){
@@ -56,7 +54,7 @@ Evaluate = function(actual=NULL, predicted=NULL, cm=NULL){
   #avg accuracy
   avgAccuracy = sum(diag(s))/sum(s)
   
-  #micro
+  #micro prf
   microPrf = (diag(s) / apply(s,1, sum))[1];
   
   #majority class
@@ -66,7 +64,7 @@ Evaluate = function(actual=NULL, predicted=NULL, cm=NULL){
   mcPrecision = 0*p; mcPrecision[mcIndex] = p[mcIndex]
   mcF1 = 0*p; mcF1[mcIndex] = 2 * mcPrecision[mcIndex] / (mcPrecision[mcIndex] + 1)
   
-  #random accuracy
+  #random/expected accuracy
   expAccuracy = sum(p*q)
   #kappa
   kappa = (accuracy - expAccuracy) / (1 - expAccuracy)
@@ -77,19 +75,16 @@ Evaluate = function(actual=NULL, predicted=NULL, cm=NULL){
   rgRecall = 0*p + 1 / nc
   rgF1 = 2 * p / (nc * p + 1)
   
-  #rnd weighted
+  #random weighted guess
   rwgAccurcy = sum(p^2)
   rwgPrecision = p
   rwgRecall = p
   rwgF1 = p
-
+  
   classNames = names(diag)
   if(is.null(classNames)) classNames = paste("C",(1:nc),sep="")
   
-  return(list(
-   ConfusionMatrix = cm,
-   Metrics = data.frame(
-    Class = classNames,
+  metrics = rbind(
     Accuracy = accuracy,
     Precision = precision,
     Recall = recall,
@@ -110,10 +105,12 @@ Evaluate = function(actual=NULL, predicted=NULL, cm=NULL){
     RandomGuessPrecision = rgPrecision,
     RandomGuessRecall = rgRecall,
     RandomGuessF1 = rgF1,
-    RandomWeightedGuessAccurcy = rwgAccurcy,
+    RandomWeightedGuessAccuracy = rwgAccurcy,
     RandomWeightedGuessPrecision = rwgPrecision,
-    RandomWeightedGuessRecall= rwgRecall,
-    RandomWeightedGuessWeightedF1 = rwgF1)))
+    RandomWeightedGuessRecall = rwgRecall,
+    RandomWeightedGuessF1 = rwgF1)
+  
+  colnames(metrics) = classNames
+  
+  return(list(ConfusionMatrix = cm, Metrics = metrics))
 }
-
-
